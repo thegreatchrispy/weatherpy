@@ -33,8 +33,8 @@ BUTTONCOLOR = WHITE
 BUTTONTEXTCOLOR = DARKBLUE
 
 # Margins
-XMARGIN = int((WINDOWWIDTH - CONTROLPANELWIDTH - (TILESIZE * BOARDWIDTH + (BOARDWIDTH - 1))) / 2)
-YMARGIN = int((WINDOWHEIGHT - (TILESIZE * BOARDHEIGHT + (BOARDHEIGHT - 1))) / 2)
+XMARGIN = int((WINDOWWIDTH - CONTROLPANELWIDTH - (CELLSIZE * GRIDWIDTH + (GRIDWIDTH - 1))) / 2)
+YMARGIN = int((WINDOWHEIGHT - (CELLSIZE * GRIDHEIGHT + (GRIDHEIGHT - 1))) / 2)
 
 # Directions
 NORTH = 'north'
@@ -46,15 +46,11 @@ SOUTHWEST = 'southwest'
 WEST = 'west'
 NORTHWEST = 'northwest'
 
+# State (Play/Pause)
+state = 'pause'
+
 def main():
-	global FPSCLOCK, DISPLAYSURF, BASICFONT, 
-			RUN_SURF, RUN_RECT, 
-			SPEED_UP_SURF, SPEED_UP_RECT, 
-			SPEED_LABEL_SURF, SPEED_LABEL_RECT, 
-			SPEED_DOWN_SURF, SPEED_DOWN_RECT, 
-			STEP_UP_SURF, STEP_UP_RECT, 
-			STEP_LABEL_SURF, STEP_LABEL_RECT, 
-			STEP_DOWN_SURF, STEP_DOWN_RECT
+	global FPSCLOCK, DISPLAYSURF, BASICFONT, RUN_SURF, RUN_RECT, SPEED_UP_SURF, SPEED_UP_RECT, SPEED_LABEL_SURF, SPEED_LABEL_RECT, SPEED_DOWN_SURF, SPEED_DOWN_RECT, STEP_UP_SURF, STEP_UP_RECT, STEP_LABEL_SURF, STEP_LABEL_RECT, STEP_DOWN_SURF, STEP_DOWN_RECT
 	
 	pygame.init()
 	FPSCLOCK = pygame.time.Clock()
@@ -76,7 +72,7 @@ def main():
 	STEP_LABEL_SURF, STEP_LABEL_RECT = makeText('Step', TEXTCOLOR, BGCOLOR, WINDOWWIDTH - 200, 160)
 	STEP_DOWN_SURF, STEP_DOWN_RECT = makeText(' - ', TEXTCOLOR, BGCOLOR, WINDOWWIDTH - 300, 160)
 
-	# Generate a random grid configuration
+	# Generate a random starting grid configuration
 	grid = generateGrid()
 	# Create an empty list to store steps for forward and backward stepping
 	allSteps = []
@@ -84,3 +80,18 @@ def main():
 	# Main game loop
 	# while True:
 		# LOGIC ...
+		# Algorithm:
+		# 	Get events
+		#	if event == mouse_button_up:
+		#		if (spotx, spoty) == (None, None):
+		#			if run_rect.collide:
+		#				if state == pause: state = play
+		#				elif state == play: state = pause
+		#			elif speed_up_rect.collide:
+		#				increaseFPS()
+		#			elif speed_down_rect.collide:
+		#				decreaseFPS()
+		#			elif step_up_rect.collide:
+		#				nextStep()
+		#			elif step_down_rect.collide:
+		#				prevStep()
