@@ -36,10 +36,10 @@ import pygame, sys, random
 from pygame.locals import *
 
 # Constants
-GRIDWIDTH = 5  # number of columns in the grid
-GRIDHEIGHT = 5 # number of rows in the grid
-CELLSIZE = 68  # size of each cell in the grid
-WINDOWWIDTH = 640
+GRIDWIDTH = 85  # number of columns in the grid
+GRIDHEIGHT = 85 # number of rows in the grid
+CELLSIZE = 4  # size of each cell in the grid (340 / GRIDWIDTH)
+WINDOWWIDTH = 800
 WINDOWHEIGHT = 480
 CONTROLPANELWIDTH = 300
 FPS = 30
@@ -112,10 +112,9 @@ def main():
 	STEP_DOWN_SURF, STEP_DOWN_RECT = makeText(' - ', BUTTONTEXTCOLOR, BUTTONCOLOR, WINDOWWIDTH - 250, 160)
 
 	# Generate a random starting grid configuration
-	mainGrid = generateGrid()
 	# Create an empty list to store steps for forward and backward stepping
 	# Stores grid configurations
-	allSteps = []
+	mainGrid, allSteps, lastStep = generateGrid()
 	stepCount = 0
 	state = PAUSE
 
@@ -140,10 +139,13 @@ def main():
 		# 				decreaseFPS()
 					elif STEP_UP_RECT.collidepoint(event.pos):
 						print('nextStep button hit')
-						nextStep(mainGrid, allSteps, stepCount)
-		# 			elif STEP_DOWN_RECT.collidepoint(event.pos):
-		# 				if stepCount > 1:
-		# 					prevStep()
+						mainGrid, allSteps, stepCount = nextStep(mainGrid, allSteps, stepCount)
+					elif STEP_DOWN_RECT.collidepoint(event.pos):
+						print('prevStep button hit')
+						print('stepCount' + str(stepCount))
+						print(str(allSteps))
+						if stepCount > 1:
+							mainGrid, allSteps, stepCount = prevStep(mainGrid, allSteps, stepCount)
 					# elif RESET_RECT.collidepoint(event.pos):
 					# 	print('reset button hit')
 					# 	reset(mainGrid, allSteps, stepCount)
@@ -151,24 +153,25 @@ def main():
 				pygame.quit()
 				sys.exit()
 		if state == PLAY:
-			runSim(mainGrid, allSteps, stepCount)
+			mainGrid, allSteps, stepCount, state = runSim(mainGrid, allSteps, stepCount, state)
 
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
 
-def runSim(grid, allSteps, stepCount):
-	state = PLAY
+def runSim(grid, allSteps, stepCount, state):
 	while state == PLAY:
 		for event in pygame.event.get():
 			if event.type == MOUSEBUTTONUP:
 				spotx, spoty = getSpotClicked(grid, event.pos[0], event.pos[1])
 				if (spotx, spoty) == (None, None):
 					if RUN_RECT.collidepoint(event.pos):
+						print('state switched to pause')
 						state = PAUSE
 			elif event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
 				pygame.quit()
 				sys.exit()
-		nextStep(grid, allSteps, stepCount)
+		grid, allSteps, stepCount = nextStep(grid, allSteps, stepCount)
+	return grid, allSteps, stepCount, state
 
 def nextStep(grid, allSteps, stepCount):
 	for x in range(GRIDWIDTH):
@@ -185,31 +188,74 @@ def nextStep(grid, allSteps, stepCount):
 	drawGrid(grid)
 	pygame.display.update()
 	pygame.time.wait(500)
+	return grid, allSteps, stepCount
+
+def prevStep(grid, allSteps, stepCount):
+	allSteps = allSteps[:-1]
+	stepCount -= 1
+	grid = allSteps[-1]
+	drawGrid(grid)
+	pygame.display.update()
+	pygame.time.wait(500)
+	return grid, allSteps, stepCount
 
 def findNextColor(current, R, G, B):
 	if current == RED:
-		if R > G+B or B == 0:
-			return RED
-		elif B > R or B > R+G:
-			return GREEN
-		else:
-			return RED
-	elif current == GREEN:
-		if (G == 0 and R > B) or R > B+G:
-			return RED
-		elif (G == 0 and R < B) or B > R+G:
-			return BLUE
+		if R > G+B:
+			if G > B:
+				return RED
+			else:
+				return GREEN
 		elif G > R+B:
+			if R > B:
+				return RED
+			else:
+				return GREEN
+		elif B > R+G:
 			return GREEN
+			# if R > G:
+			# 	return GREEN
+			# else:
+			# 	return BLUE
 		else:
-			return GREEN
+			return random.choice([RED, GREEN])
+	elif current == GREEN:
+		if R > G+B:
+			if G > B:
+				return RED
+			else:
+				return GREEN
+		elif G > R+B:
+			if R > B:
+				return RED
+			else:
+				return BLUE
+		elif B > R+G:
+			if R > G:
+				return GREEN
+			else:
+				return BLUE
+		else:
+			return random.choice([RED, GREEN, BLUE])
 	elif current == BLUE:
-		if B > R+G or R == 0:
-			return BLUE
-		elif R > B or R > B+G:
+		if R > G+B:
 			return GREEN
+			# if G > B:
+			# 	return GREEN
+			# else:
+			# 	return BLUE
+		elif G > R+B:
+			if R > B:
+				return GREEN
+			else:
+				return BLUE
+		elif B > R+G:
+			if R > G:
+				return GREEN
+			else:
+				return BLUE
 		else:
-			return BLUE
+			return random.choice([GREEN, BLUE])
 
 def getSurroundingCells(grid, x, y):
 	surrounding = []
@@ -259,7 +305,6 @@ def drawGrid(grid):
 	left, top = getLeftTopOfCell(0, 0)
 	width = GRIDWIDTH * CELLSIZE
 	height = GRIDHEIGHT * CELLSIZE
-	pygame.draw.rect(DISPLAYSURF, GRAY, (left - 5, top - 5, width + 11, height + 11), 4)
 
 	DISPLAYSURF.blit(RUN_SURF, RUN_RECT)
 
@@ -305,7 +350,7 @@ def generateGrid():
 	pygame.display.update()
 	pygame.time.wait(500)
 
-	return grid
+	return grid, allSteps, lastStep
 
 if __name__ == '__main__':
 	main()
