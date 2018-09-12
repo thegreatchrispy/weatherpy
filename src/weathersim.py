@@ -123,8 +123,7 @@ def main():
 		drawGrid(mainGrid)
 
 		for event in pygame.event.get():
-			if event == MOUSEBUTTONUP:
-				print('mouse button hit')
+			if event.type == MOUSEBUTTONUP:
 				spotx, spoty = getSpotClicked(mainGrid, event.pos[0], event.pos[1])
 
 				if (spotx, spoty) == (None, None):
@@ -141,28 +140,35 @@ def main():
 		# 				decreaseFPS()
 					elif STEP_UP_RECT.collidepoint(event.pos):
 						print('nextStep button hit')
-						nextStep(grid, allSteps, stepCount)
+						nextStep(mainGrid, allSteps, stepCount)
 		# 			elif STEP_DOWN_RECT.collidepoint(event.pos):
 		# 				if stepCount > 1:
 		# 					prevStep()
+					# elif RESET_RECT.collidepoint(event.pos):
+					# 	print('reset button hit')
+					# 	reset(mainGrid, allSteps, stepCount)
 			elif event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
 				pygame.quit()
 				sys.exit()
 		if state == PLAY:
-			runSim(mainGrid)
+			runSim(mainGrid, allSteps, stepCount)
 
 		pygame.display.update()
 		FPSCLOCK.tick(FPS)
 
-def runSim(grid):
+def runSim(grid, allSteps, stepCount):
+	state = PLAY
 	while state == PLAY:
 		for event in pygame.event.get():
-			if event == MOUSEBUTTONUP:
-				spotx, spoty = getSpotClicked(mainGrid, event.pos[0], event.pos[1])
+			if event.type == MOUSEBUTTONUP:
+				spotx, spoty = getSpotClicked(grid, event.pos[0], event.pos[1])
 				if (spotx, spoty) == (None, None):
 					if RUN_RECT.collidepoint(event.pos):
 						state = PAUSE
-		nextStep(grid)
+			elif event.type == QUIT or (event.type == KEYUP and event.key == K_ESCAPE):
+				pygame.quit()
+				sys.exit()
+		nextStep(grid, allSteps, stepCount)
 
 def nextStep(grid, allSteps, stepCount):
 	for x in range(GRIDWIDTH):
@@ -278,7 +284,7 @@ def getSpotClicked(grid, x, y):
 	# From the x, y pixel coords, get the x, y grid coords
 	for cellX in range(len(grid)):
 		for cellY in range(len(grid[0])):
-			left, top = getLeftTopOfTile(cellX, cellY)
+			left, top = getLeftTopOfCell(cellX, cellY)
 			cellRect = pygame.Rect(left, top, CELLSIZE, CELLSIZE)
 			if cellRect.collidepoint(x, y):
 				return (cellX, cellY)
